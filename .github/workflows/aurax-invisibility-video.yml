@@ -1,0 +1,42 @@
+name: Generate Aurax Invisibility Video
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/generate_aurax_invisibility.py"
+      - ".github/workflows/aurax-invisibility-video.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install renderer dependencies
+        run: python -m pip install --upgrade pip pillow edge-tts
+      - name: Render 2D animated episode and narration
+        run: python scripts/generate_aurax_invisibility.py
+      - name: Verify MP4
+        run: |
+          test -s output/aurax-invisibilidade.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 output/aurax-invisibilidade.mp4
+      - name: Upload MP4 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurax-invisibilidade-mp4
+          path: output/aurax-invisibilidade.mp4
+          retention-days: 14
